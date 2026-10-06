@@ -1,0 +1,81 @@
+@if (loading()) {
+  <div class="state">טוען סיכומים מהשרת…</div>
+} @else if (error()) {
+  <div class="state state-error">
+    <p>{{ error() }}</p>
+    <button type="button" class="btn btn-primary" (click)="load()">ניסיון חוזר</button>
+  </div>
+} @else {
+  @if (stats(); as s) {
+    @if (s.total === 0) {
+      <div class="state state-empty">
+        <p>אין עדיין פניות להצגה.</p>
+      </div>
+    } @else {
+      <h1 class="page-title">לוח בקרה</h1>
+      <p class="muted">סיכומים (aggregations) לפי סטטוס, עדיפות ומטפלים.</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">סה״כ פניות</div>
+          <div class="stat-value">{{ s.total | number }}</div>
+        </div>
+        <div class="stat-card status-new">
+          <div class="stat-label">{{ statusLabels.New }}</div>
+          <div class="stat-value">{{ count('New') | number }}</div>
+        </div>
+        <div class="stat-card status-progress">
+          <div class="stat-label">{{ statusLabels.InProgress }}</div>
+          <div class="stat-value">{{ count('InProgress') | number }}</div>
+        </div>
+        <div class="stat-card status-done">
+          <div class="stat-label">{{ statusLabels.Completed }}</div>
+          <div class="stat-value">{{ count('Completed') | number }}</div>
+        </div>
+      </div>
+
+      <div class="panels-grid">
+        <div>
+          <section class="panel">
+            <h2>לפי עדיפות</h2>
+            <ul class="plain-list">
+              <li><span>{{ priorityLabels.High }}</span><strong>{{ pcount('High') | number }}</strong></li>
+              <li><span>{{ priorityLabels.Medium }}</span><strong>{{ pcount('Medium') | number }}</strong></li>
+              <li><span>{{ priorityLabels.Low }}</span><strong>{{ pcount('Low') | number }}</strong></li>
+            </ul>
+          </section>
+          <section class="panel">
+            <h2>{{ statusLabels.Waiting }}</h2>
+            <p class="waiting-count">{{ count('Waiting') | number }}</p>
+          </section>
+        </div>
+
+        <section class="panel">
+          <h2>מטפלים מובילים</h2>
+          @if (s.topAssignees.length === 0) {
+            <p class="muted">אין נתונים.</p>
+          } @else {
+            <ul class="plain-list">
+              @for (row of s.topAssignees; track row.assignedTo) {
+                <li>
+                  <span>{{ row.assignedTo }}</span>
+                  <strong>{{ row.count | number }}</strong>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="panel">
+          <h2>עדכונים אחרונים</h2>
+          @for (item of s.recent; track item.id) {
+            <a class="recent-item" [routerLink]="['/inquiries', item.id]">
+              <div class="fw-semibold">{{ item.title }}</div>
+              <div class="muted small">{{ item.organizationName }} · {{ item.updatedAt | date:'dd/MM/yyyy HH:mm' }}</div>
+            </a>
+          }
+        </section>
+      </div>
+    }
+  }
+}

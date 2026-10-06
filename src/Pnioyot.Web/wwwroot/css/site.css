@@ -1,0 +1,63 @@
+:root {
+  --ink: #10233a;
+  --muted: #5b6b7c;
+  --bg: #f3f6fb;
+  --card: #ffffff;
+  --accent: #1f4e79;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.app-nav {
+  background: var(--accent);
+}
+
+.panel {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(16, 35, 58, 0.06);
+}
+
+.stat-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  box-shadow: 0 8px 24px rgba(16, 35, 58, 0.06);
+  border-right: 6px solid var(--accent);
+}
+
+.stat-card.status-new { border-right-color: #0d6efd; }
+.stat-card.status-progress { border-right-color: #ffc107; }
+.stat-card.status-done { border-right-color: #198754; }
+
+.stat-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.recent-item {
+  display: block;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid #e8eef5;
+  text-decoration: none;
+  color: inherit;
+}
+
+.recent-item:last-child {
+  border-bottom: 0;
+}
+
+.table thead th {
+  background: #eef3f8;
+  font-weight: 600;
+}

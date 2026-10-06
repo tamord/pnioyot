@@ -1,0 +1,8 @@
+{
+  "name": "pnioyot",
+  "private": true,
+  "scripts": {
+    "start": "npm start --prefix src/Pnioyot.Client",
+    "build": "npm run build --prefix src/Pnioyot.Client"
+  }
+}

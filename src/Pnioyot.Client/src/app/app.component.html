@@ -1,0 +1,12 @@
+<nav class="app-nav">
+  <div class="nav-inner">
+    <a class="brand" routerLink="/">מערכת פניות</a>
+    <div class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">לוח בקרה</a>
+      <a routerLink="/inquiries" routerLinkActive="active">פניות</a>
+    </div>
+  </div>
+</nav>
+<main class="container">
+  <router-outlet />
+</main>

@@ -1,0 +1,174 @@
+<div class="page-header">
+  <h1 class="page-title">פניות</h1>
+  <button type="button" class="btn btn-outline" (click)="exportCsv()">ייצוא CSV לפי הסינון</button>
+</div>
+
+@if (aggregations(); as stats) {
+  <div class="agg-row">
+    <button type="button" class="agg-chip" (click)="clearFilters()">
+      סה״כ <strong>{{ stats.total | number }}</strong>
+    </button>
+    @for (status of statuses; track status) {
+      <button type="button" class="agg-chip" (click)="filterByStatus(status)">
+        {{ statusLabels[status] }} <strong>{{ agg(status) | number }}</strong>
+      </button>
+    }
+  </div>
+}
+
+<form class="panel filters" [formGroup]="form" (ngSubmit)="applyFilters(false)">
+  <div class="filters-row">
+    <label>
+      חיפוש
+      <input formControlName="q" placeholder="כותרת, ארגון או מטפל" />
+    </label>
+    <label>
+      סטטוס
+      <select formControlName="status">
+        <option value="">הכול</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabels[status] }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      עדיפות
+      <select formControlName="priority">
+        <option value="">הכול</option>
+        @for (priority of priorities; track priority) {
+          <option [value]="priority">{{ priorityLabels[priority] }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      ארגון
+      <input formControlName="organizationName" />
+    </label>
+    <label>
+      מטפל
+      <input formControlName="assignedTo" />
+    </label>
+  </div>
+  <div class="filters-row">
+    <label>
+      מיון
+      <select formControlName="sort">
+        <option value="updated">עדכון אחרון</option>
+        <option value="created">תאריך יצירה</option>
+        <option value="title">כותרת</option>
+        <option value="org">ארגון</option>
+        <option value="priority">עדיפות</option>
+        <option value="status">סטטוס</option>
+      </select>
+    </label>
+    <label>
+      גודל עמוד
+      <select formControlName="pageSize">
+        <option [ngValue]="25">25</option>
+        <option [ngValue]="50">50</option>
+        <option [ngValue]="100">100</option>
+      </select>
+    </label>
+    <button class="btn btn-link" type="button" (click)="clearFilters()">נקה סינון</button>
+  </div>
+</form>
+
+@if (error()) {
+  <div class="state state-error">
+    <p>{{ error() }}</p>
+    <button type="button" class="btn btn-primary" (click)="retry()">ניסיון חוזר</button>
+  </div>
+}
+
+@if (empty()) {
+  <div class="state state-empty">
+    <p>לא נמצאו פניות לפי הסינון הנוכחי.</p>
+    <button type="button" class="btn btn-outline" (click)="clearFilters()">נקה סינון</button>
+  </div>
+}
+
+@if (loading() && !result()) {
+  <div class="state">טוען פניות מהשרת…</div>
+}
+
+@if (result(); as data) {
+  @if (data.items.length > 0) {
+    <p class="muted">
+      נמצאו {{ data.totalCount | number }} פניות
+      @if (loading()) {
+        · מעדכן…
+      }
+    </p>
+
+    @if (selectedCount() > 0) {
+      <div class="panel bulk-bar">
+        <span>נבחרו {{ selectedCount() }} (עד 100)</span>
+        <label>
+          סטטוס יעד
+          <select [ngModel]="bulkStatus()" (ngModelChange)="bulkStatus.set($event)">
+            @for (status of statuses; track status) {
+              <option [ngValue]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+        </label>
+        <button type="button" class="btn btn-primary" [disabled]="bulkBusy() || selectedCount() > 100" (click)="applyBulk()">
+          עדכון מרובה
+        </button>
+      </div>
+    }
+
+    @if (bulkResult(); as bulk) {
+      <div class="alert" [class.alert-success]="bulk.failedCount === 0" [class.alert-danger]="bulk.failedCount > 0">
+        מצב Partial Success: {{ bulk.succeededCount }} הצליחו, {{ bulk.failedCount }} נכשלו
+        @if (bulk.failed.length) {
+          <ul>
+            @for (fail of bulk.failed; track fail.id) {
+              <li>{{ fail.code }}: {{ fail.error }}</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    <div class="panel table-wrap" [class.is-loading]="loading()">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              <input type="checkbox" [checked]="allSelected()" (change)="toggleAll($any($event.target).checked)" />
+            </th>
+            <th>כותרת</th>
+            <th>ארגון</th>
+            <th>סטטוס</th>
+            <th>עדיפות</th>
+            <th>מטפל</th>
+            <th>עודכן</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of data.items; track item.id) {
+            <tr>
+              <td>
+                <input type="checkbox" [checked]="selectedIds().has(item.id)" (change)="toggleOne(item.id, $any($event.target).checked)" />
+              </td>
+              <td><a [routerLink]="['/inquiries', item.id]">{{ item.title }}</a></td>
+              <td>{{ item.organizationName }}</td>
+              <td><span [ngClass]="statusClass[item.status]">{{ statusLabels[item.status] }}</span></td>
+              <td>{{ priorityLabels[item.priority] }}</td>
+              <td>{{ item.assignedTo }}</td>
+              <td>{{ item.updatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="pagination">
+      <button type="button" [disabled]="data.page <= 1" (click)="goToPage(data.page - 1)">הקודם</button>
+      @for (page of pages(); track page) {
+        <button type="button" [class.active]="page === data.page" (click)="goToPage(page)">{{ page }}</button>
+      }
+      <button type="button" [disabled]="data.page >= data.totalPages" (click)="goToPage(data.page + 1)">הבא</button>
+    </nav>
+  }
+}

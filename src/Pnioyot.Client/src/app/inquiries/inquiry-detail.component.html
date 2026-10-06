@@ -1,0 +1,51 @@
+<a class="btn btn-link px-0" routerLink="/inquiries">חזרה לרשימה</a>
+
+@if (loading()) {
+  <p class="muted">טוען…</p>
+} @else if (error() && !inquiry()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else {
+  @if (inquiry(); as item) {
+    <h1 class="page-title">{{ item.title }}</h1>
+
+    @if (conflict()) {
+      <div class="alert alert-danger">
+        קונפליקט (409): הפנייה עודכנה במקביל. הנתונים רועננו — בדקו את הסטטוס ונסו שוב.
+      </div>
+    }
+    @if (message()) {
+      <div class="alert alert-success">{{ message() }}</div>
+    }
+    @if (error()) {
+      <div class="alert alert-danger">{{ error() }}</div>
+    }
+
+    <div class="detail-grid">
+      <section class="panel">
+        <dl>
+          <div><dt>מזהה</dt><dd><code>{{ item.id }}</code></dd></div>
+          <div><dt>ארגון / עסק</dt><dd>{{ item.organizationName }}</dd></div>
+          <div><dt>עדיפות</dt><dd>{{ priorityLabels[item.priority] }}</dd></div>
+          <div><dt>מטפל</dt><dd>{{ item.assignedTo }}</dd></div>
+          <div><dt>נוצר</dt><dd>{{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</dd></div>
+          <div><dt>עודכן</dt><dd>{{ item.updatedAt | date:'dd/MM/yyyy HH:mm' }}</dd></div>
+          <div><dt>RowVersion</dt><dd><code>{{ item.rowVersion }}</code></dd></div>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <h2>עדכון סטטוס</h2>
+        <p class="muted small">העדכון משתמש ב־RowVersion כדי למנוע דריסת שינוי מקבילי.</p>
+        <label>
+          סטטוס
+          <select [(ngModel)]="newStatus">
+            @for (status of statuses(); track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+        </label>
+        <button class="btn btn-primary" type="button" [disabled]="saving()" (click)="save()">שמירה</button>
+      </section>
+    </div>
+  }
+}

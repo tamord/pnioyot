@@ -1,0 +1,166 @@
+@page
+@model Pnioyot.Web.Pages.Inquiries.IndexModel
+@using Pnioyot.Web.Models
+@{
+    ViewData["Title"] = "פניות";
+    string StatusLabel(InquiryStatus s) => s switch
+    {
+        InquiryStatus.New => "חדש",
+        InquiryStatus.InProgress => "בטיפול",
+        InquiryStatus.Waiting => "ממתין",
+        InquiryStatus.Completed => "הושלם",
+        _ => s.ToString()
+    };
+    string PriorityLabel(InquiryPriority p) => p switch
+    {
+        InquiryPriority.High => "גבוהה",
+        InquiryPriority.Medium => "בינונית",
+        InquiryPriority.Low => "נמוכה",
+        _ => p.ToString()
+    };
+    string StatusClass(InquiryStatus s) => s switch
+    {
+        InquiryStatus.New => "badge text-bg-primary",
+        InquiryStatus.InProgress => "badge text-bg-warning",
+        InquiryStatus.Waiting => "badge text-bg-secondary",
+        InquiryStatus.Completed => "badge text-bg-success",
+        _ => "badge text-bg-light"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">פניות</h1>
+    <a class="btn btn-outline-primary"
+       href="@Url.Action("Export", "InquiriesApi", Model.Filter)">ייצוא CSV לפי הסינון</a>
+</div>
+
+<form method="get" class="panel mb-3">
+    <input type="hidden" name="Filter.Page" value="1" />
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">חיפוש</label>
+            <input class="form-control" name="Filter.Q" value="@Model.Filter.Q" placeholder="כותרת, ארגון או מטפל" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">סטטוס</label>
+            <select class="form-select" name="Filter.Status" asp-for="Filter.Status">
+                <option value="">הכול</option>
+                <option value="New">חדש</option>
+                <option value="InProgress">בטיפול</option>
+                <option value="Waiting">ממתין</option>
+                <option value="Completed">הושלם</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">עדיפות</label>
+            <select class="form-select" name="Filter.Priority" asp-for="Filter.Priority">
+                <option value="">הכול</option>
+                <option value="High">גבוהה</option>
+                <option value="Medium">בינונית</option>
+                <option value="Low">נמוכה</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">ארגון</label>
+            <input class="form-control" name="Filter.OrganizationName" value="@Model.Filter.OrganizationName" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">מטפל</label>
+            <input class="form-control" name="Filter.AssignedTo" value="@Model.Filter.AssignedTo" />
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-primary w-100" type="submit">סנן</button>
+        </div>
+    </div>
+    <div class="row g-2 mt-2">
+        <div class="col-md-3">
+            <label class="form-label">מיון</label>
+            <select class="form-select" name="Filter.Sort" asp-for="Filter.Sort">
+                <option value="updated">עדכון אחרון</option>
+                <option value="created">תאריך יצירה</option>
+                <option value="title">כותרת</option>
+                <option value="org">ארגון</option>
+                <option value="priority">עדיפות</option>
+                <option value="status">סטטוס</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">גודל עמוד</label>
+            <select class="form-select" name="Filter.PageSize" asp-for="Filter.PageSize">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <a class="btn btn-link" asp-page="./Index">נקה סינון</a>
+        </div>
+    </div>
+</form>
+
+<p class="text-secondary">נמצאו @Model.Result.TotalCount.ToString("N0") פניות</p>
+
+<div class="table-responsive panel p-0">
+    <table class="table table-hover mb-0 align-middle">
+        <thead>
+            <tr>
+                <th>כותרת</th>
+                <th>ארגון</th>
+                <th>סטטוס</th>
+                <th>עדיפות</th>
+                <th>מטפל</th>
+                <th>עודכן</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Result.Items)
+        {
+            <tr>
+                <td><a asp-page="./Details" asp-route-id="@item.Id">@item.Title</a></td>
+                <td>@item.OrganizationName</td>
+                <td><span class="@StatusClass(item.Status)">@StatusLabel(item.Status)</span></td>
+                <td>@PriorityLabel(item.Priority)</td>
+                <td>@item.AssignedTo</td>
+                <td>@item.UpdatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@{
+    var page = Model.Result.Page;
+    var pages = Math.Max(1, Model.Result.TotalPages);
+    var start = Math.Max(1, page - 2);
+    var end = Math.Min(pages, start + 4);
+}
+<nav class="mt-3">
+    <ul class="pagination">
+        <li class="page-item @(page <= 1 ? "disabled" : "")">
+            <a class="page-link" asp-page="./Index" asp-all-route-data="Query(page - 1)">הקודם</a>
+        </li>
+        @for (var i = start; i <= end; i++)
+        {
+            <li class="page-item @(i == page ? "active" : "")">
+                <a class="page-link" asp-page="./Index" asp-all-route-data="Query(i)">@i</a>
+            </li>
+        }
+        <li class="page-item @(page >= pages ? "disabled" : "")">
+            <a class="page-link" asp-page="./Index" asp-all-route-data="Query(page + 1)">הבא</a>
+        </li>
+    </ul>
+</nav>
+
+@functions {
+    Dictionary<string, string?> Query(int page) => new()
+    {
+        ["Filter.Q"] = Model.Filter.Q,
+        ["Filter.Status"] = Model.Filter.Status?.ToString(),
+        ["Filter.Priority"] = Model.Filter.Priority?.ToString(),
+        ["Filter.AssignedTo"] = Model.Filter.AssignedTo,
+        ["Filter.OrganizationName"] = Model.Filter.OrganizationName,
+        ["Filter.Sort"] = Model.Filter.Sort,
+        ["Filter.Page"] = page.ToString(),
+        ["Filter.PageSize"] = Model.Filter.PageSize.ToString()
+    };
+}

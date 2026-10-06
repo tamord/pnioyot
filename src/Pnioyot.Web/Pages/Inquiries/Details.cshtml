@@ -1,0 +1,51 @@
+@page "{id:guid}"
+@model Pnioyot.Web.Pages.Inquiries.DetailsModel
+@using Pnioyot.Web.Models
+@using Pnioyot.Web.Services
+@{
+    ViewData["Title"] = Model.Inquiry.Title;
+}
+
+<a class="btn btn-link px-0" asp-page="./Index">חזרה לרשימה</a>
+<h1 class="h3 mb-4">@Model.Inquiry.Title</h1>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="panel">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">מזהה</dt>
+                <dd class="col-sm-8"><code>@Model.Inquiry.Id</code></dd>
+                <dt class="col-sm-4">ארגון / עסק</dt>
+                <dd class="col-sm-8">@Model.Inquiry.OrganizationName</dd>
+                <dt class="col-sm-4">עדיפות</dt>
+                <dd class="col-sm-8">@Model.Inquiry.Priority</dd>
+                <dt class="col-sm-4">מטפל</dt>
+                <dd class="col-sm-8">@Model.Inquiry.AssignedTo</dd>
+                <dt class="col-sm-4">נוצר</dt>
+                <dd class="col-sm-8">@Model.Inquiry.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt class="col-sm-4">עודכן</dt>
+                <dd class="col-sm-8">@Model.Inquiry.UpdatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt class="col-sm-4">RowVersion</dt>
+                <dd class="col-sm-8"><code>@(Convert.ToBase64String(Model.Inquiry.RowVersion))</code></dd>
+            </dl>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="panel">
+            <h2 class="h5">עדכון סטטוס</h2>
+            <p class="text-secondary small">העדכון משתמש ב־RowVersion כדי למנוע דריסת שינוי מקבילי (optimistic concurrency).</p>
+            <form method="post">
+                <input type="hidden" asp-for="Inquiry.Id" />
+                <input type="hidden" asp-for="Inquiry.RowVersion" />
+                <label class="form-label">סטטוס</label>
+                <select class="form-select mb-3" asp-for="NewStatus">
+                    @foreach (var status in Model.StatusOptions)
+                    {
+                        <option value="@status">@InquiryStatusRules.Label(status)</option>
+                    }
+                </select>
+                <button class="btn btn-primary" type="submit">שמירה</button>
+            </form>
+        </div>
+    </div>
+</div>

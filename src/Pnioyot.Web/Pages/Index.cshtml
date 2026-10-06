@@ -1,0 +1,87 @@
+@page
+@model Pnioyot.Web.Pages.IndexModel
+@using Pnioyot.Web.Models
+@{
+    ViewData["Title"] = "לוח בקרה";
+    int Count(InquiryStatus s) => Model.Stats.ByStatus.GetValueOrDefault(s);
+    int PCount(InquiryPriority p) => Model.Stats.ByPriority.GetValueOrDefault(p);
+}
+
+<h1 class="h3 mb-4">לוח בקרה</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">סה״כ פניות</div>
+            <div class="stat-value">@Model.Stats.Total.ToString("N0")</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card status-new">
+            <div class="stat-label">חדשות</div>
+            <div class="stat-value">@Count(InquiryStatus.New).ToString("N0")</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card status-progress">
+            <div class="stat-label">בטיפול</div>
+            <div class="stat-value">@Count(InquiryStatus.InProgress).ToString("N0")</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card status-done">
+            <div class="stat-label">הושלמו</div>
+            <div class="stat-value">@Count(InquiryStatus.Completed).ToString("N0")</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="panel">
+            <h2 class="h5">לפי עדיפות</h2>
+            <ul class="list-unstyled mb-0">
+                <li class="d-flex justify-content-between py-2 border-bottom"><span>גבוהה</span><strong>@PCount(InquiryPriority.High).ToString("N0")</strong></li>
+                <li class="d-flex justify-content-between py-2 border-bottom"><span>בינונית</span><strong>@PCount(InquiryPriority.Medium).ToString("N0")</strong></li>
+                <li class="d-flex justify-content-between py-2"><span>נמוכה</span><strong>@PCount(InquiryPriority.Low).ToString("N0")</strong></li>
+            </ul>
+        </div>
+        <div class="panel mt-4">
+            <h2 class="h5">ממתינות</h2>
+            <p class="display-6 mb-0">@Count(InquiryStatus.Waiting).ToString("N0")</p>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel">
+            <h2 class="h5">מטפלים מובילים</h2>
+            @if (Model.Stats.TopAssignees.Count == 0)
+            {
+                <p class="text-secondary mb-0">אין נתונים. הריצו יצירת נתוני בדיקה.</p>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var row in Model.Stats.TopAssignees)
+                    {
+                        <li class="d-flex justify-content-between py-2 border-bottom">
+                            <span>@row.AssignedTo</span>
+                            <strong>@row.Count.ToString("N0")</strong>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel">
+            <h2 class="h5">עדכונים אחרונים</h2>
+            @foreach (var item in Model.Stats.Recent)
+            {
+                <a class="recent-item" asp-page="/Inquiries/Details" asp-route-id="@item.Id">
+                    <div class="fw-semibold">@item.Title</div>
+                    <div class="small text-secondary">@item.OrganizationName · @item.UpdatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                </a>
+            }
+        </div>
+    </div>
+</div>
